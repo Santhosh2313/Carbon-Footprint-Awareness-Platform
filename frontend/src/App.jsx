@@ -1,14 +1,14 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import Layout from './components/Layout';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import LogActivity from './pages/LogActivity';
-import CarbonCoach from './pages/CarbonCoach';
-import Analytics from './pages/Analytics';
-import Reports from './pages/Reports';
-import Gamification from './pages/Gamification';
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
+import Layout from "./components/Layout";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import LogActivity from "./pages/LogActivity";
+import CarbonCoach from "./pages/CarbonCoach";
+import Analytics from "./pages/Analytics";
+import Reports from "./pages/Reports";
+import Gamification from "./pages/Gamification";
 
 function RequireAuth({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -26,7 +26,14 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
+      <Route
+        path="/"
+        element={
+          <RequireAuth>
+            <Layout />
+          </RequireAuth>
+        }
+      >
         <Route index element={<Dashboard />} />
         <Route path="log" element={<LogActivity />} />
         <Route path="coach" element={<CarbonCoach />} />

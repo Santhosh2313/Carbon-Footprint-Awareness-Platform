@@ -1,21 +1,27 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import {
   onAuthStateChanged,
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-} from 'firebase/auth';
-import { getFirebaseAuth, isFirebaseConfigured } from '../config/firebase';
-import { API_BASE } from '../config/api';
+} from "firebase/auth";
+import { getFirebaseAuth, isFirebaseConfigured } from "../config/firebase";
+import { API_BASE } from "../config/api";
 
-const TOKEN_KEY = 'ecotrack_auth_token';
-const USER_KEY = 'ecotrack_auth_user';
+const TOKEN_KEY = "ecotrack_auth_token";
+const USER_KEY = "ecotrack_auth_user";
 
 function loadStoredSession() {
   try {
     const token = localStorage.getItem(TOKEN_KEY);
-    const user = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+    const user = JSON.parse(localStorage.getItem(USER_KEY) || "null");
     return token && user ? { token, user } : null;
   } catch {
     return null;
@@ -39,7 +45,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const firebaseEnabled = isFirebaseConfigured();
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
   const applySession = useCallback((t, u) => {
     setToken(t);
@@ -76,7 +82,7 @@ export function AuthProvider({ children }) {
           email: u.email,
           displayName: u.displayName,
           photoURL: u.photoURL,
-          authProvider: 'firebase',
+          authProvider: "firebase",
         });
       } else {
         applySession(null, null);
@@ -88,13 +94,13 @@ export function AuthProvider({ children }) {
   /** Google Identity Services — works without Firebase console link */
   const loginWithGoogleCredential = async (credential) => {
     const res = await fetch(`${API_BASE}/api/v1/auth/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ idToken: credential }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || err.error || 'Google sign-in failed');
+      throw new Error(err.message || err.error || "Google sign-in failed");
     }
     const data = await res.json();
     applySession(credential, {
@@ -102,13 +108,13 @@ export function AuthProvider({ children }) {
       email: data.user.email,
       displayName: data.user.displayName || data.user.name,
       photoURL: data.user.picture || data.user.photoURL,
-      authProvider: 'google.com',
+      authProvider: "google.com",
     });
   };
 
   const loginGoogleFirebase = async () => {
     const fb = getFirebaseAuth();
-    if (!fb) throw new Error('Firebase Auth is not configured.');
+    if (!fb) throw new Error("Firebase Auth is not configured.");
     const result = await signInWithPopup(fb.auth, fb.googleProvider);
     const t = await result.user.getIdToken();
     applySession(t, {
@@ -116,35 +122,48 @@ export function AuthProvider({ children }) {
       email: result.user.email,
       displayName: result.user.displayName,
       photoURL: result.user.photoURL,
-      authProvider: 'firebase',
+      authProvider: "firebase",
     });
   };
 
-  const loginGoogle = () => (firebaseEnabled ? loginGoogleFirebase() : Promise.reject(new Error('Use GoogleSignInButton')));
+  const loginGoogle = () =>
+    firebaseEnabled
+      ? loginGoogleFirebase()
+      : Promise.reject(new Error("Use GoogleSignInButton"));
 
   const loginEmail = async (email, password) => {
     const fb = getFirebaseAuth();
-    if (!fb) throw new Error('Email sign-in requires Firebase Auth. Use Google sign-in.');
+    if (!fb)
+      throw new Error(
+        "Email sign-in requires Firebase Auth. Use Google sign-in.",
+      );
     const result = await signInWithEmailAndPassword(fb.auth, email, password);
     const t = await result.user.getIdToken();
     applySession(t, {
       uid: result.user.uid,
       email: result.user.email,
       displayName: result.user.displayName,
-      authProvider: 'firebase',
+      authProvider: "firebase",
     });
   };
 
   const registerEmail = async (email, password) => {
     const fb = getFirebaseAuth();
-    if (!fb) throw new Error('Registration requires Firebase Auth. Use Google sign-in.');
-    const result = await createUserWithEmailAndPassword(fb.auth, email, password);
+    if (!fb)
+      throw new Error(
+        "Registration requires Firebase Auth. Use Google sign-in.",
+      );
+    const result = await createUserWithEmailAndPassword(
+      fb.auth,
+      email,
+      password,
+    );
     const t = await result.user.getIdToken();
     applySession(t, {
       uid: result.user.uid,
       email: result.user.email,
       displayName: result.user.displayName,
-      authProvider: 'firebase',
+      authProvider: "firebase",
     });
   };
 
@@ -155,19 +174,21 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      token,
-      loading,
-      firebaseEnabled,
-      googleClientId,
-      isAuthenticated: Boolean(user && token),
-      loginGoogle,
-      loginWithGoogleCredential,
-      loginEmail,
-      registerEmail,
-      logout,
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        firebaseEnabled,
+        googleClientId,
+        isAuthenticated: Boolean(user && token),
+        loginGoogle,
+        loginWithGoogleCredential,
+        loginEmail,
+        registerEmail,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
